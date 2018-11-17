@@ -76,28 +76,25 @@ class SpacenetDataset(utils.Dataset):
         """
         # Add classes. We have only one class to add.
         self.add_class("spacenet", 1, "spacenet")
-
-        # Train or validation dataset?
-        assert subset in ["train", "val"]
-        dataset_dir = os.path.join(dataset_dir, subset)
-
-        coco = COCO("{}/annotations/instances_{}{}.json".format(dataset_dir, subset, year))
-        if subset == "minival" or subset == "valminusminival":
-            subset = "val"
-        image_dir = "{}/{}{}".format(dataset_dir, subset, year)
-
-        
-        image_ids = list(coco.imgs.keys())
-
+        assert subset in ["train", "val", "test"];
+        subset_dir = "train" if subset in ["train", "val"] else subset
+        dataset_dir = os.path.join(dataset_dir, subset_dir)
+        dataset_dir = os.path.join(dataset_dir, "images")
+        #image_ids = next(os.walk(dataset_dir))[1]
+        #if subset == "train":
+        #    image_ids = list(set(image_ids))
         # Add images
-        for i in image_ids:
+        image_ids= ['3band_AOI_1_RIO_img6917.jpeg']
+        for image_id in image_ids:
+            image_path = os.path.join(dataset_dir, image_id)
+            image = skimage.io.imread(image_path)
+            height, width = image.shape[:2]
+
             self.add_image(
-                "spacenet", image_id=i,
-                path=os.path.join(image_dir, coco.imgs[i]['file_name']),
-                width=coco.imgs[i]["width"],
-                height=coco.imgs[i]["height"],
-                annotations=coco.loadAnns(coco.getAnnIds(
-                    imgIds=[i], catIds=class_ids, iscrowd=None)))
+                "spacenet",
+                image_id=image_id,  # use file name as a unique image id
+                path=image_path,
+                width=width, height=height)
 
     def load_mask(self, image_id):
         """Generate instance masks for an image.
